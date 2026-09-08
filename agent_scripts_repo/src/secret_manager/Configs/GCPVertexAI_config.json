@@ -1,0 +1,52 @@
+{
+	"configurations": [
+		{
+			"comment": "Configuration #1 - Gemini 2.5 flash with Azure Key Vault",
+			"LLMConfiguration": {
+				"EndPoint": "https://dh1-gemini.com/test_ad",
+				"DeploymentName": "gemini-2.5-flash",
+				"Provider": "gcpvertexai",
+				"AIModelType": "LLM",
+				"Active": true,
+				"AuthenticationType": "secretKey",
+				"SecretStoreType": "azurekeyVault",
+				"ApiVersion": "v1",
+				"AIModelDetails": {
+					"DeploymentModelId": "gemini-2.5-flash",
+					"ModelName": "gemini-2.5-flash",
+					"ModelVersion": "2024-05-13",
+					"InputToken": 1048576,
+					"OutputToken": 65536,
+					"PromptCost": 0.03,
+					"CompletionCost": 0.06
+				},
+				"AdditionalHeaders": null,
+				"AIModelContractDetails": null
+			}
+		},
+		{
+			"comment": "Configuration #2 - Gemini with AWS using OAuth",
+			"LLMConfiguration": {
+				"EndPoint": "https://dh1-test.accenture.com/test/llm",
+				"DeploymentName": "gemini-2.5-pro",
+				"Provider": "rest",
+				"AIModelType": "APIM",
+				"Active": true,
+				"AuthenticationType": "oauth2",
+				"SecretStoreType": "azurekeyVault",
+				"ApiVersion": "v1",
+				"AIModelDetails": {
+					"DeploymentModelId": "gemini-2.5-pro",
+					"ModelName": "gemini-2.5-pro",
+					"ModelVersion": "2024-05-13",
+					"InputToken": 1048576,
+					"OutputToken": 65536,
+					"PromptCost": 0.03,
+					"CompletionCost": 0.06
+				},
+				"AdditionalHeaders": null,
+				"AIModelContractDetails": null
+			}
+		}
+	]
+}

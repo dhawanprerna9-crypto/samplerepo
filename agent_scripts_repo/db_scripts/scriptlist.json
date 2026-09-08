@@ -1,0 +1,8 @@
+[
+  "001_create_schema.sql",
+  "002_create_scriptlist.sql",
+  "003_AIModelConfig.sql",
+  "004_AIModelDetails.sql",
+  "005_rag_schema.sql",
+  "006_rag_sample_data.sql"
+]

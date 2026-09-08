@@ -1,0 +1,52 @@
+{
+	"configurations": [
+		{
+			"comment": "Configuration #1 - AWS Bedrock with Azure Key Vault",
+			"LLMConfiguration": {
+				"EndPoint": "https://aif-svi-genwizard-dev.services.ai.azure.com",
+				"DeploymentName": "anthropic.claude-sonnet-v1:0",
+				"Provider": "awsbedrock",
+				"AIModelType": "LLM",
+				"Active": true,
+				"AuthenticationType": "secretKey",
+				"SecretStoreType": "azurekeyVault",
+				"ApiVersion": "",
+				"AIModelDetails": {
+					"DeploymentModelId": "us.anthropic.claude-sonnet-v1:0",
+					"ModelName": "anthropic.claude-sonnet-v1:0",
+					"ModelVersion": "v1",
+					"InputToken": 200000,
+					"OutputToken": 200000,
+					"PromptCost": 0.03,
+					"CompletionCost": 0.06
+				},
+				"AdditionalHeaders": null,
+				"AIModelContractDetails": null
+			}
+		},
+		{
+			"comment": "Configuration #2 - AWS Bedrock with AWS using OAuth2",
+			"LLMConfiguration": {
+				"EndPoint": "https://apinpbedrock.mywizard-aiops.com/invoke_model",
+				"DeploymentName": "anthropic.claude-sonnet-20250219-v1:0",
+				"Provider": "rest",
+				"AIModelType": "APIM",
+				"Active": true,
+				"AuthenticationType": "oauth2",
+				"SecretStoreType": "AWSSecretsManager",
+				"ApiVersion": "",
+				"AIModelDetails": {
+					"DeploymentModelId": "apac.anthropic.claude-sonnet-20250219-v1:0",
+					"ModelName": "anthropic.claude-sonnet-20250219-v1:0",
+					"ModelVersion": "v1",
+					"InputToken": 200000,
+					"OutputToken": 200000,
+					"PromptCost": 0.03,
+					"CompletionCost": 0.06
+				},
+				"AdditionalHeaders": null,
+				"AIModelContractDetails": null
+			}
+		}
+	]
+}

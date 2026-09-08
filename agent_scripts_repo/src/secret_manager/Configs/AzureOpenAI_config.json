@@ -1,0 +1,101 @@
+{
+ "configurations": [
+  {
+   "comment": "Configuration #1 - Azure OpenAI GPT-5.1 with Azure Key Vault",
+   "LLMConfiguration": {
+    "EndPoint": "https://cog-svi-genwiz-openai-dev-dplt2dv.openai.azure.com/",
+    "DeploymentName": "gpt-5.1",
+    "Provider": "azureopenai",
+    "AIModelType": "LLM",
+    "Active": false,
+    "AuthenticationType": "secretKey",
+    "SecretStoreType": "azurekeyvault",
+    "ApiVersion": "2025-04-01-preview",
+    "AIModelDetails": {
+     "DeploymentModelId": "gpt-5.1",
+     "ModelName": "gpt-5.1",
+     "ModelVersion": "1.0",
+     "InputToken": 8000,
+     "OutputToken": 4000,
+     "PromptCost": 0.03,
+     "CompletionCost": 0.06
+    },
+    "AdditionalHeaders": null,
+    "AIModelContractDetails": null
+   }
+  },
+  {
+   "comment": "Configuration #2 - Azure OpenAI GPT-4.1 with Azure Key Vault",
+   "LLMConfiguration": {
+    "EndPoint": "https://srch-nvi-genwizard-devres.openai.azure.com/",
+    "DeploymentName": "gpt-4.1",
+    "Provider": "azureopenai",
+    "AIModelType": "LLM",
+    "Active": true,
+    "AuthenticationType": "secretKey",
+    "SecretStoreType": "azurekeyvault",
+    "ApiVersion": "2024-02-01",
+    "AIModelDetails": {
+     "DeploymentModelId": "genwiz_gpt-4.1",
+     "ModelName": "gpt-4.1",
+     "ModelVersion": "1.0",
+     "InputToken": 36000,
+     "OutputToken": 8000,
+     "PromptCost": 0.03,
+     "CompletionCost": 0.06
+    },
+    "AdditionalHeaders": null,
+    "AIModelContractDetails": null
+   }
+  },
+  {
+   "comment": "Configuration #3 - Azure OpenAI GPT-5.1 with Azure Key Vault",
+   "LLMConfiguration": {
+    "EndPoint": "https://cog-svi-genwizard4-openai-nonprod.openai.azure.com/",
+    "DeploymentName": "gpt-5.1",
+    "Provider": "azureopenai",
+    "AIModelType": "LLM",
+    "Active": false,
+    "AuthenticationType": "secretKey",
+    "SecretStoreType": "awssecretsmanager",
+    "ApiVersion": "2025-04-01-preview",
+    "AIModelDetails": {
+     "DeploymentModelId": "gpt-5.1",
+     "ModelName": "gpt-5.1",
+     "ModelVersion": "1.0",
+     "InputToken": 32000,
+     "OutputToken": 32000,
+     "PromptCost": 0.03,
+     "CompletionCost": 0.06
+    },
+    "AdditionalHeaders": null,
+    "AIModelContractDetails": null
+   }
+  },
+  {
+   "comment": "Configuration #3 - Azure OpenAI GPT-5.4 with Azure Key Vault",
+    "LLMConfiguration": {
+      "EndPoint": "https://srch-nvi-genwizard-devres.openai.azure.com/",
+      "DeploymentName": "gpt-5.4",
+      "Provider": "azureopenai",
+      "AIModelType": "LLM",
+      "Active": true,
+      "AuthenticationType": "secretKey",
+      "SecretStoreType": "azurekeyvault",
+      "ApiVersion": "2025-04-01-preview",
+      "AIModelDetails": {
+        "DeploymentModelId": "gpt-5.4",
+        "ModelName": "gpt-5.4",
+        "ModelVersion": "2026-03-05",
+        "InputToken": 1050000,
+        "OutputToken": 128000,
+        "PromptCost": 2.50,
+        "CompletionCost": 15.00
+      },
+      "AdditionalHeaders": null,
+      "AIModelContractDetails": null
+    }
+  }
+ ]
+}
+ 

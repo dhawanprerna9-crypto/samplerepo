@@ -1,0 +1,522 @@
+{
+  "_description": "Tool Gateway configuration used when database_enabled=false in llmConfig.ini. For streamable-http services (vertexai, backstage), tools are discovered live from the MCP endpoint and the tools array here is ignored. For api-transport services (quasar), list every tool the agent may call.",
+
+  "services": {
+    "Quasar": {
+      "_description": "QPP / MyWizard Quasar REST API (transport=api). Credentials are read from llmConfig.ini [Quasar] or the secret store. Each tool's auth token is injected as the 'apiToken' request header.",
+      "tools": [
+        {
+          "name": "QuasarSearchAndGenerate",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/searchandgenerate",
+            "method": "POST",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "json",
+            "description": "Using the OpenAISearchVectorGenerate API, filter documents for a subset of useful information and transform the extracted information into another format. For example, based on a list of incidents with an ID and a Description, generate a set of testcases. Supports advanced metadata and similarity filtering.",
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "query",
+                "primary_index",
+                "secondary_index",
+                "prompt_objective",
+                "max_count",
+                "chunk_size"
+              ],
+              "properties": {
+                "query": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Plain text which needs to be looked at the Open AI document for explanation."
+                },
+                "config": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Specify the source of where to target the search. If not set, generic OpenAI information will be used."
+                },
+                "max_count": {
+                  "type": "number",
+                  "source": "default",
+                  "default": 10,
+                  "description": "The maximum number of items/records to be generated e.g. 100 use cases."
+                },
+                "chunk_size": {
+                  "type": "number",
+                  "source": "default",
+                  "default": 1,
+                  "description": "The number of calls in each LLM batch call."
+                },
+                "outpul_eval": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Desired response format for output data; use * to indicate no specific format is required."
+                },
+                "primary_index": {
+                  "type": "string",
+                  "source": "user",
+                  "default": "CrossIndustry_idx",
+                  "description": "Index name to search."
+                },
+                "prompt_prefix": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "How Quasar++ should approach the task."
+                },
+                "prompt_suffix": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Additional information explaining how information could be extracted or inferred."
+                },
+                "prompt_template": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "The structure or format of the ingested data inputs."
+                },
+                "secondary_index": {
+                  "type": "string",
+                  "source": "user",
+                  "default": "CrossIndustry_idx",
+                  "description": "Secondary index name to search."
+                },
+                "prompt_objective": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "High-level goal that focusses the search."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "query": "{{query}}",
+              "config": "{{config}}",
+              "max_count": "{{max_count}}",
+              "chunk_size": "{{chunk_size}}",
+              "outpul_eval": "{{outpul_eval}}",
+              "primary_index": "{{primary_index}}",
+              "prompt_prefix": "{{prompt_prefix}}",
+              "prompt_suffix": "{{prompt_suffix}}",
+              "prompt_template": "{{prompt_template}}",
+              "secondary_index": "{{secondary_index}}",
+              "prompt_objective": "{{prompt_objective}}"
+            },
+            "instructions": "Use @metadata: to filter by metadata tags. Use @similarity: for semantic similarity search. Use @content: to get content from specific fields. Use @file_name: to filter by filename. Note: file_name and metadata cannot be used together in the same request."
+          }
+
+        },
+        {
+          "name": "QuasarSearchVector",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/searchvectors",
+            "method": "POST",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "json",
+            "description": "Search for related information from a vector database using vector similarity. Returns vectors with the highest similarity scores to the query. Supports @metadata:, @similarity:, @content:, @file_name: filter prefixes.",
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "output",
+                "query",
+                "index",
+                "search_limit"
+              ],
+              "properties": {
+                "index": {
+                  "type": "string",
+                  "source": "default",
+                  "default": "CrossIndustry_idx",
+                  "description": "Index name to search. Deterministically defaulted when the caller/agent does not supply one; a generated agent injects its own dedicated index via tool_arg_overrides."
+                },
+                "query": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Plain text query. Supports @metadata:, @similarity:, @content:, @file_name: filter prefixes."
+                },
+                "output": {
+                  "type": "string",
+                  "source": "user",
+                  "default": "*",
+                  "description": "Desired response format; use * for no specific format."
+                },
+                "search_limit": {
+                  "type": "number",
+                  "source": "default",
+                  "default": 10000,
+                  "description": "Maximum number of vector results to return."
+                },
+                "search_criteria": {
+                  "type": "array",
+                  "items": { "type": "string", "enum": ["knn", "keyword", "graph"] },
+                  "source": "default",
+                  "default": ["knn", "keyword", "graph"],
+                  "description": "Retrieval strategy for the vector search. 'knn' = vector nearest-neighbour similarity, 'keyword' = lexical match, 'graph' = knowledge-graph traversal. May be combined; defaults to knn+keyword+graph when not specified."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "index": "{{index}}",
+              "query": "{{query}}",
+              "output": "{{output}}",
+              "search_limit": "{{search_limit}}",
+              "search_criteria": "{{search_criteria}}"
+            },
+            "instructions": "Use @metadata: to filter by metadata tags. Use @similarity: for semantic similarity search. Use @content: to get content from specific fields. Use @file_name: to filter by filename. Note: file_name and metadata cannot be used together in the same request."
+          }
+
+        },
+        {
+          "name": "QuasarChatCompletion",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/chatcompletion",
+            "method": "POST",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "json",
+            "description": "Ask QPP's own LLM a question against an indexed corpus. Returns a refined natural-language answer in 'content' field that can be used as the similarity query in a subsequent QuasarSearchVector call. Use this as Stage 1 of the two-stage RAG flow (ChatCompletion → SearchVector).",
+            "inputSchema": {
+              "type": "object",
+              "required": ["prompt", "index"],
+              "properties": {
+                "prompt": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Natural-language question or passage to reason over."
+                },
+                "index": {
+                  "type": "string",
+                  "source": "default",
+                  "default": "CrossIndustry_idx",
+                  "description": "Index to search when generating the response. A generated agent injects its own dedicated index via tool_arg_overrides."
+                },
+                "reset_context": {
+                  "type": "string",
+                  "source": "default",
+                  "default": "True",
+                  "description": "Reset conversation context on each call for stateless retrieval."
+                },
+                "search_criteria": {
+                  "type": "array",
+                  "items": { "type": "string", "enum": ["knn", "keyword", "graph"] },
+                  "source": "default",
+                  "default": ["knn", "keyword", "graph"],
+                  "description": "Retrieval strategy used internally by QPP when generating the response. 'knn' = vector nearest-neighbour, 'keyword' = lexical, 'graph' = knowledge-graph. May be combined."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "prompt": "{{prompt}}",
+              "index": "{{index}}",
+              "reset_context": "{{reset_context}}",
+              "search_criteria": "{{search_criteria}}"
+            },
+            "instructions": "Stage 1 of the two-stage RAG flow. Call with the user query as 'prompt'; extract 'content' from the response and use it as the 'query' for a subsequent QuasarSearchVector call."
+          }
+
+        },
+        {
+          "name": "quasar_upload_document",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/upload",
+            "method": "POST",
+            "params": {},
+            "headers": {},
+            "bodyType": "multipart",
+            "fileFields": [
+              "file"
+            ],
+            "description": "Upload a document file to a specified Quasar index for ingestion and vectorisation.",
+            "inputSchema": {
+              "type": "object",
+              "required": [
+                "index",
+                "file"
+              ],
+              "properties": {
+                "file": {
+                  "type": "string",
+                  "format": "binary",
+                  "source": "file",
+                  "description": "Document file to upload. Pass via the files parameter of invoke_tool_gateway()."
+                },
+                "index": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Index name where the document will be stored."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "index": "{{index}}"
+            }
+          }
+
+        },
+        {
+          "name": "QuasarListDocs",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/listdocs/{{index}}",
+            "method": "GET",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "queryParams",
+            "description": "List the documents that have been indexed under a given Quasar index. Returns an array of {doc_name, ...}.",
+            "inputSchema": {
+              "type": "object",
+              "required": ["index"],
+              "properties": {
+                "index": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Index name whose documents should be listed. Supplied via tool_arg_overrides by a generated agent."
+                }
+              }
+            },
+            "bodyTemplate": {},
+            "instructions": "Index is passed as a path segment. Use to confirm a document is present in an index before/after upload."
+          }
+
+        },
+        {
+          "name": "QuasarUploadStatus",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/uploadstatus/taskid/{{task_id}}/formattedjson",
+            "method": "GET",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "queryParams",
+            "description": "Check the status of an asynchronous document upload by its TaskID. Returns the formatted status (Completed, Started, etc.).",
+            "inputSchema": {
+              "type": "object",
+              "required": ["task_id"],
+              "properties": {
+                "task_id": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "TaskID returned by the upload call. Supplied via tool_arg_overrides."
+                }
+              }
+            },
+            "bodyTemplate": {},
+            "instructions": "TaskID is passed as a path segment. Poll until Status is Completed before running vector/graph steps against a freshly uploaded document."
+          }
+
+        },
+        {
+          "name": "QuasarKGWorkspaceList",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/knowledgegraph/workspace/list",
+            "method": "GET",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "queryParams",
+            "description": "List knowledge-graph workspaces for an index. Used to detect whether a SAVED graph already exists (enabling graph search criteria).",
+            "inputSchema": {
+              "type": "object",
+              "required": ["index_name"],
+              "properties": {
+                "index_name": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Index whose graph workspaces should be listed. Supplied via tool_arg_overrides."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "index_name": "{{index_name}}"
+            },
+            "instructions": "Returns {workspaces: [{workspace_id, status, node_count, ...}]}. A workspace with status SAVED means graph search is available."
+          }
+
+        },
+        {
+          "name": "QuasarKGCreateWorkspace",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/knowledgegraph/workspace",
+            "method": "POST",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "json",
+            "description": "Create a knowledge-graph workspace for an index (step 1 of the create-graph flow).",
+            "inputSchema": {
+              "type": "object",
+              "required": ["index_name"],
+              "properties": {
+                "workspace_name": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Workspace name. Supplied via tool_arg_overrides (e.g. adlc_ws_<index>)."
+                },
+                "index_name": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Index the workspace is built over."
+                },
+                "selected_categories": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "source": "default",
+                  "default": ["structural", "business"],
+                  "description": "Entity categories to extract."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "workspace_name": "{{workspace_name}}",
+              "index_name": "{{index_name}}",
+              "selected_categories": "{{selected_categories}}"
+            },
+            "instructions": "Returns {workspace_id}. Follow with QuasarKGBuild, then poll QuasarKGWorkspaceList until STAGED/SAVED, then QuasarKGSave."
+          }
+
+        },
+        {
+          "name": "QuasarKGBuild",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/knowledgegraph/build",
+            "method": "POST",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "json",
+            "description": "Trigger asynchronous entity extraction (graph build) for a workspace (step 2 of the create-graph flow).",
+            "inputSchema": {
+              "type": "object",
+              "required": ["workspace_id", "index_name"],
+              "properties": {
+                "workspace_id": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Workspace to build. Supplied via tool_arg_overrides."
+                },
+                "index_name": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Index the workspace is built over."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "workspace_id": "{{workspace_id}}",
+              "index_name": "{{index_name}}"
+            },
+            "instructions": "Returns {task_id}. Build is async; poll QuasarKGWorkspaceList until status is STAGED/SAVED."
+          }
+
+        },
+        {
+          "name": "QuasarKGStaged",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/knowledgegraph/staged",
+            "method": "GET",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "queryParams",
+            "description": "Fetch the staged (built but not yet committed) knowledge-graph entities for a build task.",
+            "inputSchema": {
+              "type": "object",
+              "required": ["task_id"],
+              "properties": {
+                "task_id": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Build task_id from QuasarKGBuild. Supplied via tool_arg_overrides."
+                },
+                "workspace_id": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Workspace whose staged graph is reviewed."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "task_id": "{{task_id}}",
+              "workspace_id": "{{workspace_id}}"
+            },
+            "instructions": "Returns {nodes, summary}. Zero nodes with zero token_usage means extraction produced nothing; skip save and fall back to knn+keyword."
+          }
+
+        },
+        {
+          "name": "QuasarKGSave",
+          "Tool_definition": {
+            "path": "/api/v2/acnopenai/knowledgegraph/save",
+            "method": "POST",
+            "params": {},
+            "headers": {
+              "Content-Type": "application/json"
+            },
+            "bodyType": "json",
+            "description": "Commit a staged knowledge graph (STAGED -> SAVED) so graph search becomes available for the index (final step of the create-graph flow).",
+            "inputSchema": {
+              "type": "object",
+              "required": ["workspace_id", "index_name"],
+              "properties": {
+                "workspace_id": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Workspace to save. Supplied via tool_arg_overrides."
+                },
+                "index_name": {
+                  "type": "string",
+                  "source": "user",
+                  "description": "Index the graph belongs to."
+                }
+              }
+            },
+            "bodyTemplate": {
+              "workspace_id": "{{workspace_id}}",
+              "index_name": "{{index_name}}"
+            },
+            "instructions": "Returns {entities, structural_nodes}. Zero of both means nothing was extracted; graph search stays disabled."
+          }
+
+        }
+
+      ],
+      "endpoint": "https://dh3-genwizardadstagetest1quasar.mywizard-aiops.com",
+      "transport": "api",
+      "config": "{\"description\": \"Quasar service for vector search, document search-and-generate, and document upload over indexed knowledge bases\"}"
+    },
+
+    "VertexAI": {
+      "_description": "Vertex AI MCP gateway (transport=streamable-http). Tools are discovered live from the MCP endpoint — the tools array below is intentionally empty.",
+      "tools": [],
+      "endpoint": "https://envision-mcp-gateway-dev-1mwke5zy.ue.gateway.dev/mcp",
+      "transport": "streamable-http",
+      "config": {
+        "project_id": "mggwlxj-gadkagentsfortdlc",
+        "description": "Vertex RAG service for semantic search over enterprise knowledge corpus via MCP"
+      }
+    },
+
+    "Backstage": {
+      "_description": "Backstage MCP gateway (transport=streamable-http). Tools are discovered live from the MCP endpoint — the tools array below is intentionally empty.",
+      "tools": [],
+      "endpoint": "",
+      "transport": "streamable-http",
+      "config": {
+        "description": "Backstage internal documentation and service catalog via MCP protocol for dynamic tool discovery",
+        "mcp_server_name": ""
+      }
+    }
+
+  }
+}
+
