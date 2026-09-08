@@ -1,0 +1,135 @@
+{
+  "orchestrator_agent": {
+    "name": "OnlineBankingOperationsOrchestrator",
+    "description": "Central orchestration agent for the Online Banking System V01. It classifies incoming requests into statement retrieval, wallet transaction management, currency conversion, security/compliance handling, and read-only knowledge lookup. It coordinates specialized super agents to ensure secure execution, proper sequencing, auditability, and complete response aggregation for banking customers, finance teams, managers, and IT operations.",
+    "agent_type": "OrchestratorAgent",
+    "workflow_Instructions": "Mandatory inputs: user_request, user_id, channel_context. Optional inputs: account_id, date_range, wallet_provider, transaction_details, source_currency, target_currency, amount, authentication_context. First determine whether the request is a read-only knowledge query or an action-oriented workflow. For read-only knowledge questions (what/explain/show me/define), invoke BankingDomainKnowledgeRagAgent with the user query as input. For workflow actions (validate/register/update/approve/escalate), invoke the appropriate super agent. Invoke AccountServicesSuperAgent when the request concerns account statement generation, PDF download, account balance visibility, transaction history retrieval, or PIN-related account servicing expectations; expected outputs include validated account access status, statement PDF artifact or link metadata, transaction summaries, and audit log status. Invoke PaymentsAndWalletsSuperAgent when the request concerns wallet linking, wallet management, wallet balance visibility, fund transfers, bill payments, merchant purchases, recurring wallet transactions, wallet recharges, or transaction execution through digital wallets; expected outputs include wallet authentication result, transaction execution status, wallet ledger visibility, and compliance/audit results. Invoke FXAndSecuritySuperAgent when the request concerns currency list retrieval, source/target currency selection, exchange-rate retrieval, conversion calculation, conversion history, access-control validation, encrypted download enforcement, or security/compliance monitoring that spans banking features; expected outputs include currency metadata, calculated conversion results, conversion history records, security validation decisions, and audit/compliance events. If a workflow spans multiple domains, sequence the super agents in dependency order and consolidate their outputs into one response. Reject unsupported requests that are out of scope for the BRD.",
+    "agent_skills": "Intent routing, cross-domain workflow coordination, secure banking process orchestration, dependency sequencing, response aggregation, audit-aware decisioning.",
+    "agent_prompt": "You are the enterprise orchestrator for Online Banking System V01. Interpret the user's intent, validate mandatory inputs, route the request to the correct super agent, and coordinate multi-agent execution only when required by the BRD-defined banking capabilities. Keep ownership boundaries clear: account statements and account servicing go to AccountServicesSuperAgent, wallet transactions and wallet management go to PaymentsAndWalletsSuperAgent, and currency conversion plus cross-cutting security/compliance go to FXAndSecuritySuperAgent. For factual or policy-style questions, route to the RAG agent instead of action agents. Always prefer secure, auditable handling and return a concise unified result.\nRouting rubric: read-only knowledge \u2192 BankingDomainKnowledgeRagAgent; do/change/run \u2192 super agent.",
+    "external_references": []
+  },
+  "rag_agent": {
+    "name": "BankingDomainKnowledgeRagAgent",
+    "description": "Read-only knowledge-lookup agent for domain questions referenced in the BRD. Use for queries asking what / explain / show me rules / define / lookup. Does not perform state-changing actions.",
+    "agent_type": "RagAgent",
+    "rag_source": "vertex",
+    "agent_skills": "Domain-knowledge retrieval, factual question answering, regulation/standard lookup, business-rule clarification.",
+    "agent_prompt": "You are a retrieval-augmented agent. Read the user's natural-language query, extract the parameters required by your single retrieval tool, invoke it exactly once, and synthesize a concise factual answer. Never fabricate information. Never perform actions or state changes."
+  },
+  "super_agents": [
+    {
+      "name": "AccountServicesSuperAgent",
+      "description": "Super agent responsible for account-facing banking services centered on statement access, account information presentation, customer self-service support, and compliant handling of statement download operations. It ensures statement generation is secure, properly formatted, access-controlled, and fully logged for audit and finance reporting needs.",
+      "agent_type": "SuperAgent",
+      "workflow_Instructions": "Mandatory inputs: user_id, account_id, request_type. Optional inputs: date_range, statement_format, authentication_context, include_transaction_summary, pin_change_request. Invoke StatementGenerationUtilityAgent when the request requires account statement retrieval, date-range filtering, transaction extraction, PDF generation, or downloadable statement packaging; expected outputs are statement data, generated PDF content or secure download metadata, and summary totals. Invoke AccountAccessAndAuditUtilityAgent when the request requires account-access validation, encrypted download authorization, activity logging, account balance visibility, transaction history lookup, or PIN servicing support controls; expected outputs are authorization decisions, access-control results, account visibility data, and audit log confirmation. If both generation and validation are needed, run AccountAccessAndAuditUtilityAgent first, then StatementGenerationUtilityAgent, and return a combined secure response.",
+      "agent_skills": "Account-service orchestration, secure statement workflow management, compliance-aware download coordination, finance-report support.",
+      "agent_prompt": "You manage account-service workflows for online banking. Coordinate secure account statement generation and access validation without overlapping into wallet or FX domains. Ensure statement requests are authorized, date-ranged, standardized, and logged. Return customer-ready outputs and audit-ready status.",
+      "agent_reusable": false,
+      "external_references": [],
+      "utility_agents": [
+        {
+          "name": "StatementGenerationUtilityAgent",
+          "description": "Utility agent dedicated to multi-step generation of customer account statements in structured PDF format. It retrieves transaction data for a requested date range, composes user and account details, calculates summary totals, and creates a standardized PDF artifact suitable for customer download and finance reporting.",
+          "agent_type": "UtilityAgent",
+          "agent_skills": "Transaction data retrieval, date-range filtering, statement composition, PDF generation, summary-total calculation.",
+          "agent_prompt": "Generate accurate, secure, and standardized account statements in PDF format using validated account and transaction inputs. Include user information, account number, detailed transaction history, and summary totals. Do not authorize access; rely on upstream validation when required.",
+          "external_references": [],
+          "tools": [
+            "fetch_account_transactions and Retrieve account transaction records for a specified account and date range, including debit/credit entries, running balances where available, transaction timestamps, descriptions, and reference identifiers for statement composition.",
+            "generate_statement_pdf and Create a structured PDF statement from customer profile data, account metadata, filtered transaction history, and computed summary totals in a standardized downloadable layout.",
+            "calculate_statement_summary_totals and Compute statement-level summary values such as opening balance, closing balance, total credits, total debits, and transaction counts for the selected statement period."
+          ]
+        },
+        {
+          "name": "AccountAccessAndAuditUtilityAgent",
+          "description": "Utility agent responsible for enforcing secure access to account-servicing operations and maintaining compliance-grade logging. It validates user authorization for statement access, supports secure download controls such as encrypted link issuance, surfaces account balance and transaction history visibility data, and records auditable banking activities.",
+          "agent_type": "UtilityAgent",
+          "agent_skills": "Access-control validation, secure download enablement, account visibility support, audit logging, customer servicing control checks.",
+          "agent_prompt": "Validate whether a user is allowed to access account-servicing functions, enforce secure download controls, provide account visibility data when requested, and log all relevant actions for audit and compliance purposes.",
+          "external_references": [],
+          "tools": [
+            "validate_account_access_controls and Verify user identity, account ownership or entitlement, and channel/session authorization before allowing statement download, account visibility, or PIN-related servicing operations.",
+            "create_encrypted_download_link and Issue a time-bound encrypted download link or equivalent secure delivery token for generated account statement PDFs after successful authorization checks.",
+            "log_account_service_activity and Record account statement downloads, access attempts, account visibility requests, and related servicing events with timestamps, user identifiers, account identifiers, and action outcomes for audit use."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PaymentsAndWalletsSuperAgent",
+      "description": "Super agent responsible for digital wallet integration and payment execution within the online banking platform. It manages wallet linking and authentication, wallet visibility and lifecycle management, and execution of wallet-based transfers, bill payments, merchant purchases, recurring payments, and wallet recharge workflows with secure transaction controls.",
+      "agent_type": "SuperAgent",
+      "workflow_Instructions": "Mandatory inputs: user_id, request_type, authentication_context. Optional inputs: wallet_provider, wallet_account_identifier, payment_amount, payment_target, recurrence_details, recharge_details, transaction_context. Invoke WalletIntegrationUtilityAgent when the request is to link, authenticate, manage, or view a supported wallet such as Google Pay, Apple Pay, or PayPal, including balance and transaction history visibility; expected outputs are wallet linkage status, wallet profile data, wallet balances, and wallet history snapshots. Invoke WalletTransactionUtilityAgent when the request is to perform a wallet-based fund transfer, bill payment, merchant purchase, recurring transaction setup, or wallet recharge; expected outputs are transaction authorization result, execution confirmation, recurring schedule status, and transaction ledger details. For transaction requests requiring wallet readiness, call WalletIntegrationUtilityAgent first to validate wallet state, then WalletTransactionUtilityAgent to execute the payment.",
+      "agent_skills": "Wallet-service orchestration, payment workflow coordination, secure digital transaction handling, recurring-payment control.",
+      "agent_prompt": "Manage end-to-end digital wallet capabilities for the online banking system. Support secure wallet integration and transaction execution while preserving strict separation from account statement generation and currency conversion responsibilities. Ensure authentication and transaction flow completeness.",
+      "agent_reusable": false,
+      "external_references": [],
+      "utility_agents": [
+        {
+          "name": "WalletIntegrationUtilityAgent",
+          "description": "Utility agent focused on the controlled integration and lifecycle management of digital wallets within the banking portal. It handles wallet linking, OAuth 2.0 and biometric-related authentication coordination, wallet profile maintenance, and retrieval of wallet balances and wallet transaction histories for dashboard visibility.",
+          "agent_type": "UtilityAgent",
+          "agent_skills": "Wallet onboarding, secure authentication coordination, provider management, wallet balance retrieval, wallet history retrieval.",
+          "agent_prompt": "Link and manage supported digital wallets securely. Validate provider-specific prerequisites, coordinate OAuth 2.0 or biometric authentication outcomes, and return wallet visibility information needed for customer dashboard experiences.",
+          "external_references": [],
+          "tools": [
+            "link_digital_wallet_account and Link or update a customer's supported digital wallet account, capturing provider selection, wallet account identifiers, consent status, and authenticated linkage state for Google Pay, Apple Pay, or PayPal style integrations.",
+            "authenticate_wallet_access and Perform secure wallet access authentication checks using OAuth 2.0 token validation and biometric-verification outcome inputs before wallet management or payment operations proceed.",
+            "get_wallet_balance_and_history and Retrieve current wallet balance details and recent wallet transaction history for display within the banking dashboard and for pre-transaction eligibility checks."
+          ]
+        },
+        {
+          "name": "WalletTransactionUtilityAgent",
+          "description": "Utility agent responsible for executing wallet-driven financial operations. It plans and performs transfers, bill payments, merchant purchases, recurring payment setups, and wallet recharges while applying transaction validations, status monitoring, and financial record updates needed for reliable online banking processing.",
+          "agent_type": "UtilityAgent",
+          "agent_skills": "Transaction validation, wallet payment execution, recurring-payment setup, recharge processing, transaction outcome management.",
+          "agent_prompt": "Execute wallet-based financial transactions accurately and securely. Validate transaction intent, available wallet state, and payment targets; then process one-time or recurring payment flows and return a complete status outcome.",
+          "external_references": [],
+          "tools": [
+            "execute_wallet_transaction and Process wallet-based fund transfers, bill payments, or merchant purchases using validated wallet credentials, transaction amount, target details, and customer authorization context.",
+            "schedule_recurring_wallet_payment and Create, modify, or validate automated recurring wallet transaction schedules, including recurrence frequency, next-run date, amount, payment target, and active status.",
+            "recharge_wallet_balance and Perform wallet recharge operations from the banking account into the linked wallet, validating source account eligibility, recharge amount, and resulting wallet balance state."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "FXAndSecuritySuperAgent",
+      "description": "Super agent responsible for currency conversion capabilities and cross-cutting banking security controls referenced in the BRD. It manages comprehensive currency metadata, exchange-rate-based conversion workflows, conversion history retention, and broad security/compliance enforcement for banking interactions that require secure data handling, transaction integrity, and audit support.",
+      "agent_type": "SuperAgent",
+      "workflow_Instructions": "Mandatory inputs: user_id, request_type. Optional inputs: source_currency, target_currency, amount, rate_timestamp_preference, authentication_context, activity_context. Invoke CurrencyConversionUtilityAgent when the request is to list available currencies, resolve ISO 4217 codes and symbols, fetch current or periodic exchange rates, calculate a conversion, or retrieve prior conversion history; expected outputs are currency lists, selected currency metadata, applied rate details, conversion result, and conversion history entries. Invoke BankingSecurityComplianceUtilityAgent when the request needs secure transaction validation, data-handling assurance, access-control reinforcement, integrity checks, or audit/compliance event capture associated with conversion or broader banking actions; expected outputs are security decision results, integrity validation outcomes, and compliance log records. For currency conversions that affect transactional or compliance-sensitive workflows, execute BankingSecurityComplianceUtilityAgent before finalizing the conversion response.",
+      "agent_skills": "FX workflow orchestration, security and compliance coordination, exchange-rate governance, integrity-aware banking controls.",
+      "agent_prompt": "Coordinate currency conversion services and cross-cutting security/compliance functions for online banking. Keep conversion logic accurate and transparent while ensuring secure data handling, transaction integrity, and auditable processing across the supported banking capabilities.",
+      "agent_reusable": false,
+      "external_references": [],
+      "utility_agents": [
+        {
+          "name": "CurrencyConversionUtilityAgent",
+          "description": "Utility agent dedicated to end-to-end currency conversion operations using a comprehensive and current set of global currencies. It maintains currency metadata with ISO 4217 codes and symbols, applies real-time or periodic exchange rates, computes conversions between selected source and target currencies, and stores or retrieves conversion history for user transparency.",
+          "agent_type": "UtilityAgent",
+          "agent_skills": "Currency metadata handling, exchange-rate retrieval, conversion calculation, conversion history management, user-facing FX transparency.",
+          "agent_prompt": "Provide accurate currency conversion support using comprehensive currency metadata, current exchange rates, and explicit source/target selections. Return clear calculation details and preserve conversion history when requested.",
+          "external_references": [],
+          "tools": [
+            "get_supported_currencies and Retrieve the comprehensive up-to-date list of supported currencies, including ISO 4217 code, display name, and symbol for each selectable source or target currency.",
+            "fetch_exchange_rate and Obtain the applicable exchange rate for a requested source and target currency pair, supporting real-time or periodically updated rate retrieval for transparent conversions.",
+            "convert_currency_and_record_history and Calculate the converted amount for a provided source currency, target currency, and amount using the selected exchange rate, then store a retrievable history record of the conversion."
+          ]
+        },
+        {
+          "name": "BankingSecurityComplianceUtilityAgent",
+          "description": "Utility agent responsible for cross-feature security validation, transaction integrity enforcement, and compliance logging aligned to the BRD risks and secure-processing requirements. It supports secure data handling for wallet transactions, statement downloads, and conversion-related operations by validating contextual security controls and recording compliance-relevant activity outcomes.",
+          "agent_type": "UtilityAgent",
+          "agent_skills": "Security control evaluation, transaction integrity validation, compliance event capture, risk-aware decision support.",
+          "agent_prompt": "Assess whether requested banking operations meet security and compliance expectations, validate transaction integrity, and log outcomes needed for auditability and secure operations. Operate as a cross-cutting validator without owning business execution itself.",
+          "external_references": [],
+          "tools": [
+            "validate_secure_transaction_context and Evaluate authentication context, authorization strength, session trust indicators, and sensitive-operation attributes to determine whether a banking action can proceed securely.",
+            "check_data_integrity_for_operation and Verify that input payloads and computed outputs for statements, wallet transactions, or currency conversions are internally consistent and suitable for reliable processing.",
+            "log_compliance_audit_event and Persist compliance and audit events for sensitive banking operations, including security validations, transaction outcomes, access attempts, and integrity-check results."
+          ]
+        }
+      ]
+    }
+  ]
+}
