@@ -1,0 +1,27 @@
+agent-framework-core==1.4.0
+agent-framework-foundry==1.4.0
+agent-framework-foundry-hosting==1.0.0a260514
+azure-ai-projects==2.1.0
+azure-identity==1.25.3
+pydantic==2.13.0
+debugpy
+pytest
+psycopg[binary]>=3.1
+litellm==1.91.3
+langchain-core==1.0.3
+boto3==1.42.90
+azure-keyvault-secrets==4.11.0
+google-cloud-secret-manager==2.27.0
+google-cloud-secret-manager
+psycopg==3.3.3
+psycopg-binary==3.3.3
+psycopg_pool==3.3.0
+langfuse>=3.0.0,<3.20.0
+opentelemetry-instrumentation-openai>=0.44.1
+# FastMCP -> A2A -> Microsoft Agent Framework hosting (mcp_a2a_server.py)
+a2a-sdk==0.3.23
+fastmcp>=2.14.0
+uvicorn==0.38.0
+httpx>=0.28,<0.29
+# Keycloak OAuthProxy + JWT auth for the MCP endpoint (keycloak_auth.py).
+PyJWT[crypto]>=2.8.0
